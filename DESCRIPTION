@@ -18,3 +18,5 @@ Imports:
     estmeansd,
     stats,
     ucminf
+Suggests:
+    testthat (>= 3.0.0)

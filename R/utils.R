@@ -50,5 +50,5 @@ get_dfun <- function(dist) {
 # Ensure stats functions accessed via get() are declared as imports
 #' @importFrom stats dnorm pnorm qnorm dlnorm plnorm qlnorm dexp pexp qexp
 #'   dbeta pbeta qbeta dgamma pgamma qgamma dweibull pweibull qweibull
-#'   integrate optim
+#'   integrate optim glm binomial pt residuals model.matrix
 NULL
