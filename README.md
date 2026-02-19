@@ -242,7 +242,7 @@ This integration-based approach is more precise than simulation methods, avoidin
 
 If you use quant2dist in your research, please cite:
 
-> Rand D, et al. (2026). Likelihood estimation for network meta-analysis. *Manuscript in preparation*.
+> Rand K, et al. (2026). Likelihood estimation for network meta-analysis. *Manuscript in preparation*.
 
 ## Related Packages
 
@@ -260,7 +260,7 @@ Contributions are welcome! Please open an issue or submit a pull request on GitH
 
 ## Authors
 
-- Daniel Rand (Maths in Health)
+- Kim Rand (Maths in Health)
 
 ---
 
