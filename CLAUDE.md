@@ -4,18 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**quant2dist** is an R project for fitting parametric distributions to reported quantile data. It implements maximum likelihood estimation to recover distribution parameters from summary statistics (quantiles, means, SDs) commonly reported in medical/scientific literature. The associated manuscript is "Likelihood estimation for NMA" (network meta-analysis) by Rand et al.
+**quant2dist** is an R project for fitting parametric distributions to reported quantile data. It implements maximum likelihood estimation to recover distribution parameters from summary statistics (quantiles, means, SDs) commonly reported in medical/scientific literature. The associated manuscript is "Likelihood estimation for NMA" (network meta-analysis) by Rand et al. The package also contains functions to estimate OR and RR based on estimated quantiles. However, better methods have been developed to do so by way of integration. The OR and RR estimation functions should be substituted by new ones. The new functions should be renamed more appropriately, documented etc.
 
 ## Refactoring Plan
 
-The goal is to add support for estimation of OR and RR based on estimated quantiles, starting from functions found in the file `R/2026.02.17 - OR_RR_with_example.R`.
+The goal is to add support for new estimation functions for OR and RR based on estimated quantiles, starting from functions found in the file `R/exp_or_exp_rr.R`.
 
 These functions should be added to quant2dist, employing similar naming and coding conventions, including CRAN compliance, snake_case for all internal and exported functions, full documentation supporting roxygen2, sensible file splits, etc.
 
 
 
 ### Step 1: Tidy up and CRAN compliance
-- Remove any duplicate code. 
+- Remove any duplicate code. Substitute old OR/RR functions.
 - Identify and fix non-CRAN-compliant patterns: `T`/`F` instead of `TRUE`/`FALSE`, use of `require()` instead of proper imports, `eval(parse(...))` where avoidable, missing function documentation
 - Replace `suppressWarnings()` with proper condition handling where appropriate
 - Ensure no global variable references or side effects
@@ -30,8 +30,8 @@ These functions should be added to quant2dist, employing similar naming and codi
 - Add roxygen2 documentation for all exported functions
 - Declare Imports properly 
 
-### Step 4: Test and verify
-- Write testthat tests confirming that the new OR/RR function produces identical results to the original
+### Step 4: Create functions to allow OR and RR estimation based on reported quantiles
+- Create a sensible function or functions that allow users to specify quantile information (such as used by q2d) for cases and non-cases, which should result in q2d estimation and subsequent OR and RR estimation. Please provide suggestions for helpful input formats.
 - Test using a mix of distribution families: normal, lognormal, exponential, beta, gamma, weibull
 - Run `R CMD check --as-cran` with zero errors, warnings, or notes
 
@@ -42,7 +42,7 @@ These functions should be added to quant2dist, employing similar naming and codi
 
 ## Current Architecture
 
-The existing quant2dist files are sensibly organized, while the OR/RR estimation function is in a single file entire codebase lives in a single file: `R/2026.02.17 - OR_RR_with_example.R`
+The existing quant2dist files are sensibly organized, while the new OR/RR estimation functions are in a single file: `R/exp_or_exp_rr.R`
 
 ### Input format
 

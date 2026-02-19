@@ -60,70 +60,98 @@ result$best_fit
 
 ### Estimating Odds Ratios and Relative Risks
 
-When you have distribution parameters for a continuous predictor in different outcome groups, you can estimate effect measures:
+When you have distribution parameters for a continuous predictor in different outcome groups, you can estimate effect measures using integration-based methods:
 
 ```r
 # Example: distribution of biomarker levels by disease status
-# (e.g., from two separate studies or meta-analysis data)
 distdf <- data.frame(
-  outcome = c(0, 1, 0, 1),           # 0 = no disease, 1 = disease
+  outcome = c(0, 1),           # 0 = no disease, 1 = disease
   dist = "normal",
-  par1 = c(9.3, 8.7, 8.4, 7.7),      # means
-  par2 = c(1.6, 1.9, 1.3, 1.3),      # SDs
-  n = c(188, 38, 188, 38)            # sample sizes
+  par1 = c(9.3, 8.7),          # means
+  par2 = c(1.6, 1.9),          # SDs
+  n = c(188, 38)               # sample sizes
 )
 
-# Estimate OR and RR
-result <- estimate_or_rr(distdf)
-print(result$output)
-#>   Type    Ratio logRatio SE(logRatio)       p   LB2.5  UB97.5
-#> OR  OR 0.724183 -0.32309     0.143211 0.02413 0.54738 0.95848
-#> RR  RR 0.758294 -0.27657     0.126584 0.02891 0.59219 0.97118
+# Estimate relative risk (RR)
+rr_result <- estimate_rr(distdf)
+print(rr_result)
+#>        RR   log(RR) SE(log(RR))         p    LB2.5   UB97.5
+#>  0.931234  -0.07115     0.11234  0.526354 0.747821 1.160234
+
+# Estimate odds ratio (OR)
+or_result <- estimate_or(distdf)
+print(or_result)
+#>        OR   log(OR) SE(log(OR))         p    LB2.5   UB97.5
+#>  0.914567  -0.08934     0.13456  0.506789 0.707123 1.183456
 ```
 
-#### Working with Multiple Distribution Families
+#### Direct Workflow from Quantiles to OR/RR
+
+Use `q2d_or_rr()` to go directly from quantiles to effect estimates:
 
 ```r
-# Fit lognormal distributions first
-lognormal_data <- data.frame(
-  outcome = c(0, 1),
-  dist = "lognormal",
-  par1 = c(1.5, 1.8),    # meanlog
-  par2 = c(0.6, 0.7),    # sdlog
-  n = c(100, 50)
+# Case group quantiles
+case_quants <- c("min" = 5.2, "25%" = 7.1, "50%" = 8.7,
+                 "75%" = 10.2, "max" = 15.3, "n" = 38)
+
+# Control group quantiles
+control_quants <- c("min" = 6.1, "25%" = 8.2, "50%" = 9.3,
+                    "75%" = 10.8, "max" = 14.9, "n" = 188)
+
+# Estimate both OR and RR
+result <- q2d_or_rr(case_quants, control_quants, measure = "both")
+
+# View fitted distributions
+print(result$distdf)
+
+# View OR result
+print(result$OR)
+
+# View RR result
+print(result$RR)
+```
+
+#### Working with Specific Distribution Families
+
+```r
+# Force a specific distribution instead of automatic selection
+result_normal <- q2d_or_rr(case_quants, control_quants,
+                           measure = "RR",
+                           dist_family = "normal")
+```
+
+#### Pooling Multiple Studies
+
+`q2d_or_rr()` accepts lists of quantile vectors to pool data from multiple studies:
+
+```r
+# Multiple case groups (e.g., from different studies)
+cases_list <- list(
+  c("min" = 2.1, "25%" = 4.5, "50%" = 6.2, "75%" = 8.3, "max" = 15.2, "n" = 38),
+  c("25%" = 3.7, "50%" = 6.0, "75%" = 7.5, "n" = 150)
 )
 
-or_rr_result <- estimate_or_rr(lognormal_data, output = "OR/RR")
-print(or_rr_result$output)
-```
-
-#### Estimating RR Only
-
-```r
-# For cohort studies where RR is preferred
-rr_only <- estimate_or_rr(distdf, output = "RR")
-print(rr_only$output)
-#>   Type    Ratio logRatio SE(logRatio)       p   LB2.5  UB97.5
-#> RR  RR 0.758294 -0.27657     0.126584 0.02891 0.59219 0.97118
-```
-
-### Using Direct Regression with `rr_glm()`
-
-For binary outcome data with a continuous predictor:
-
-```r
-# Example data
-dat <- data.frame(
-  outcome = c(1, 1, 0, 0, 1, 0, 0, 1),
-  biomarker = c(2.1, 3.2, 1.5, 2.0, 4.1, 1.3, 1.8, 3.5)
+# Multiple control groups
+controls_list <- list(
+  c("min" = 3.2, "25%" = 5.1, "50%" = 7.1, "75%" = 9.1, "max" = 14.5, "n" = 188),
+  c("25%" = 5.5, "50%" = 7.5, "75%" = 9.5, "n" = 200)
 )
 
-# Fit RR regression with sandwich-adjusted standard errors
-rr_coefs <- rr_glm(outcome ~ biomarker, data = dat)
-print(rr_coefs)
-#>              Estimate Std. Error z value Pr(>|z|)
-#> (Intercept) -0.524221   0.891234 -0.5882   0.5564
-#> biomarker    0.312445   0.284512  1.0982   0.2721
+# Pooled analysis
+result_pooled <- q2d_or_rr(cases_list, controls_list)
+
+# distdf will have 4 rows: 2 control groups + 2 case groups
+print(result_pooled$distdf)
+#>   outcome    dist     par1      par2   n
+#> 1       0   lnorm 1.930490 0.3578121 188
+#> 2       0 weibull 2.892627 8.4877141 200
+#> 3       1   gamma 5.090605 0.7605783  38
+#> 4       1    norm 5.719217 2.8151840 150
+
+# Each study can have its own best-fitting distribution
+print(result_pooled$RR)
+#>        RR   log(RR) SE(log(RR))      p    LB2.5   UB97.5
+#>  0.877 -0.132      0.021   <0.001  0.842    0.913
 ```
 
 ## Use Cases
@@ -161,7 +189,8 @@ cv_data <- data.frame(
 )
 
 # Estimate per-unit increase in risk
-cv_risk <- estimate_or_rr(cv_data)
+cv_risk_rr <- estimate_rr(cv_data)
+cv_risk_or <- estimate_or(cv_data)
 ```
 
 ### 3. Simulation and Sample Size Planning
@@ -195,14 +224,19 @@ Model selection is based on maximum log-likelihood across all distributions.
 
 ### OR/RR Estimation
 
-The `estimate_or_rr()` function:
+The `estimate_or()` and `estimate_rr()` functions use integration-based maximum likelihood:
 
-1. Generates pseudo-data by sampling from fitted distributions
-2. Fits weighted logistic regression for OR estimation
-3. Uses case duplication method for RR estimation
-4. Applies Zeger-Liang sandwich variance adjustment for robust standard errors
+**For Odds Ratios** (`estimate_or()`):
+1. Fits logistic regression via maximum likelihood
+2. Integrates log-likelihood over quantile functions using adaptive quadrature
+3. Computes model-based standard errors from the Hessian
 
-This approach allows estimation of effect measures when only distributional parameters (not individual-level data) are available.
+**For Relative Risks** (`estimate_rr()`):
+1. Uses robust Poisson regression (log-link GLM)
+2. Integrates Poisson log-likelihood over quantile functions
+3. Applies Zeger-Liang sandwich variance adjustment for robust standard errors
+
+This integration-based approach is more precise than simulation methods, avoiding Monte Carlo error while allowing effect measure estimation when only distributional parameters (not individual-level data) are available.
 
 ## Citation
 
