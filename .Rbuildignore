@@ -1,0 +1,8 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^CLAUDE\.md$
+^\.claude$
+^.*\.docx$
+README.md
+^Example_output$
+^Example_graphs$

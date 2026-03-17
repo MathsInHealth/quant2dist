@@ -1,0 +1,27 @@
+Package: quant2dist
+Title: Fit Parametric Distributions to Reported Quantile Data
+Version: 0.1.0
+Authors@R: c(
+    person("Kim", "Rand", role = c("aut", "cre"),
+           email = "kim@mathsinhealth.com"),
+    person("Maths in Health", role = "cph"))
+Description: Recovers parametric distribution parameters from summary
+    statistics (quantiles, means, standard deviations) commonly reported
+    in medical and scientific literature. Fits normal, lognormal,
+    exponential, beta, gamma, Weibull, and Power Normal distributions
+    using maximum likelihood estimation. Selects the best-fitting
+    distribution by AIC, BIC, or log-likelihood. Optionally creates
+    interactive visualisations of density curves, cumulative probability
+    curves, and parameter comparison tables via the 'plotly' package.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    estmeansd,
+    powdist,
+    stats,
+    ucminf
+Suggests:
+    plotly,
+    testthat (>= 3.0.0)
